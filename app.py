@@ -125,7 +125,7 @@ if 'schema'     not in st.session_state: st.session_state.schema     = None
 if 'groq_key'   not in st.session_state: st.session_state.groq_key   = st.secrets.get("GROQ_API_KEY", "")
 
 # ── Groq LLM Call ─────────────────────────────────────────────────
-def call_groq(messages: list, api_key: str, model="llama3-8b-8192") -> str:
+def call_groq(messages: list, api_key: str, model="llama-3.1-8b-instant") -> str:
     """Call Groq API directly via requests."""
     import requests
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
@@ -133,7 +133,13 @@ def call_groq(messages: list, api_key: str, model="llama3-8b-8192") -> str:
     try:
         r = requests.post("https://api.groq.com/openai/v1/chat/completions",
                           headers=headers, json=payload, timeout=30)
-        r.raise_for_status()
+        if r.status_code != 200:
+            try:
+                err_body = r.json()
+                err_msg = err_body.get("error", {}).get("message", r.text)
+            except:
+                err_msg = r.text
+            return f"ERROR {r.status_code}: {err_msg}"
         return r.json()["choices"][0]["message"]["content"]
     except Exception as e:
         return f"ERROR: {str(e)}"
@@ -177,7 +183,7 @@ Rules:
         {"role": "user",   "content": question}
     ]
 
-    sql_query = call_groq(messages, api_key)
+    sql_query = call_groq(messages, api_key, model)
 
     # Clean up any accidental markdown
     sql_query = re.sub(r'```sql|```', '', sql_query).strip()
@@ -193,7 +199,7 @@ Rules:
             {"role": "system", "content": "You are a data analyst. Given a question and SQL result, give a clear, concise 1-2 sentence answer. Be specific with numbers."},
             {"role": "user",   "content": f"Question: {question}\n\nSQL Result (first 5 rows):\n{result_df.head().to_string()}\n\nTotal rows returned: {len(result_df)}"}
         ]
-        interpretation = call_groq(interp_messages, api_key)
+        interpretation = call_groq(interp_messages, api_key, model)
         return result_df, sql_query, interpretation
 
     except Exception as e:
@@ -260,7 +266,7 @@ with st.sidebar:
     else:
         st.markdown('<div style="color:#f87171;font-size:12px">⚠️ Add GROQ_API_KEY to Streamlit Secrets</div>', unsafe_allow_html=True)
 
-    model = st.selectbox("🧠 LLM Model", ["llama3-8b-8192", "llama3-70b-8192", "mixtral-8x7b-32768"])
+    model = st.selectbox("🧠 LLM Model", ["llama-3.1-8b-instant", "llama-3.1-70b-versatile", "llama-3.1-70b-versatile", "mixtral-8x7b-32768"])
 
     st.markdown("---")
     st.markdown("### 📊 Sample Questions")

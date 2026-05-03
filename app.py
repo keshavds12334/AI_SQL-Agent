@@ -254,19 +254,13 @@ with st.sidebar:
     st.markdown("### ⚙️ Configuration")
     st.markdown("---")
 
-    groq_key = st.text_input("🔑 Groq API Key",
-                              value=st.session_state.groq_key,
-                              type="password",
-                              placeholder="gsk_...",
-                              help="Get free key at console.groq.com")
-    if groq_key:
-        st.session_state.groq_key = groq_key
+    # API key loaded securely from Streamlit Secrets — never shown in UI
     if st.session_state.groq_key:
-        st.markdown('<div style="color:#34d399;font-size:12px">✅ API key loaded</div>', unsafe_allow_html=True)
+        st.markdown('<div style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:8px;padding:8px 12px;font-size:12px;color:#34d399">🔒 API Key: Secured via Streamlit Secrets</div>', unsafe_allow_html=True)
     else:
-        st.markdown('<div style="color:#f87171;font-size:12px">⚠️ Add GROQ_API_KEY to Streamlit Secrets</div>', unsafe_allow_html=True)
+        st.markdown('<div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:8px 12px;font-size:12px;color:#f87171">⚠️ GROQ_API_KEY not found in Secrets</div>', unsafe_allow_html=True)
 
-    model = st.selectbox("🧠 LLM Model", ["llama-3.1-8b-instant", "llama-3.3-70b-versatile", "llama-3.3-70b-versatile", "mixtral-8x7b-32768"])
+    model = st.selectbox("🧠 LLM Model", ["llama-3.1-8b-instant", "llama-3.3-70b-versatile", "mixtral-8x7b-32768"])
 
     st.markdown("---")
     st.markdown("### 📊 Sample Questions")
@@ -407,11 +401,14 @@ for chat in st.session_state.chat_hist:
 
 # ── QUESTION INPUT ────────────────────────────────────────────────
 prefill = st.session_state.pop('prefill_q', '')
+if 'input_key' not in st.session_state:
+    st.session_state.input_key = 0
 question = st.text_input(
     "Type your question...",
     value=prefill,
     placeholder="e.g. What is the average salary by department?",
-    label_visibility="collapsed"
+    label_visibility="collapsed",
+    key=f"q_input_{st.session_state.input_key}"
 )
 
 col_ask, col_clear = st.columns([3, 1])
@@ -446,6 +443,7 @@ if ask_btn and question:
             "result_df": result_df,
             "chart":     chart
         })
+        st.session_state.input_key += 1  # increments key → clears input box
         st.rerun()
 
 # ── FOOTER ────────────────────────────────────────────────────────

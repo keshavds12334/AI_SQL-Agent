@@ -266,7 +266,7 @@ with st.sidebar:
     else:
         st.markdown('<div style="color:#f87171;font-size:12px">⚠️ Add GROQ_API_KEY to Streamlit Secrets</div>', unsafe_allow_html=True)
 
-    model = st.selectbox("🧠 LLM Model", ["llama-3.1-8b-instant", "llama-3.1-70b-versatile", "llama-3.1-70b-versatile", "mixtral-8x7b-32768"])
+    model = st.selectbox("🧠 LLM Model", ["llama-3.1-8b-instant", "llama-3.3-70b-versatile", "llama-3.3-70b-versatile", "mixtral-8x7b-32768"])
 
     st.markdown("---")
     st.markdown("### 📊 Sample Questions")
